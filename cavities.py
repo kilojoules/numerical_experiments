@@ -17,13 +17,17 @@ rho = 1
 nu = .1
 dt = .001
 
+Pr = 1e-4
+Ra = 1e-4
+
 u = np.zeros((ny, nx))
 v = np.zeros((ny, nx))
 p = np.zeros((ny, nx)) 
+phi = np.zeros((ny, nx)) 
 b = np.zeros((ny, nx))
 
 # helper function. These terms are part of the posson equation.
-@nb.jit
+#@nb.jit
 def build_up_b(b, rho, dt, u, v, dx, dy):
     
     b[1:-1, 1:-1] = (rho * (1 / dt * 
@@ -36,7 +40,7 @@ def build_up_b(b, rho, dt, u, v, dx, dy):
 
     return b
 
-@nb.jit
+#@nb.jit
 def pressure_poisson(p, dx, dy, b):
     pn = np.empty_like(p)
     pn = p.copy()
@@ -56,8 +60,8 @@ def pressure_poisson(p, dx, dy, b):
         
     return p
 
-@nb.jit
-def cavity_flow(nt, u, v, dt, dx, dy, p, rho, nu):
+#@nb.jit
+def cavity_flow(nt, u, v, dt, dx, dy, p, rho, nu, phi):
     un = np.empty_like(u)
     vn = np.empty_like(v)
     b = np.zeros((ny, nx))
@@ -65,13 +69,38 @@ def cavity_flow(nt, u, v, dt, dx, dy, p, rho, nu):
     for n in range(nt):
         un = u.copy()
         vn = v.copy()
+        phin = phi.copy()
         
         b = build_up_b(b, rho, dt, u, v, dx, dy)
         p = pressure_poisson(p, dx, dy, b)
-        
-        u[1:-1, 1:-1] = u[1:-1, 1:-1] + dt * ( -1 * (p[1:-1, 1:-1] - p[0:-2, 1:-1])/dx + Pr / np.sqrt(Ra) * (u[2:, 1:-1] - 2 * u[1:-1, 1:-1], + u[:-2, 1:-1]) / dx / dx - u[1:-1, 1:-1] * (u[1:-1, 1:-1] - u[0:-2, 1:-1]) / dx - v[1:-1, 1:-1] * (u[1:-1, 1:-1] - u[1:-1, 0:-2]) / dy )
 
-        v[1:-1,1:-1] = v[1:-1, 1:-1] + dt * ( -1 * (p[1:-1, 1:-1] - p[1:-1, 0:-2])/dy + Pr/np.sqrt(Ra) * (v[1:-1, 2:] - 2 * v[1:-1, 1:-1] + v[1:-1, 0:-2]) / dy / dy - u[1:-1, 1:-1] * (v[1:-1, 1:-1] - v[0:-2, 1:-1]) / dx - v[1:-1, 1:-1] * (v[1:-1, 1:-1] - v[1:-1, 0:-2]) / dy ) + phi[1:-1,1:-1] * Pr
+        phi[1:-1, 1:-1] = phin[1:-1, 1:-1] + dt * (1/np.sqrt(Ra) * (u[2:, 1:-1] - 2 * u[1:-1, 1:-1] + u[0:-2, 1:-1]) / dx / dx + (v[2:, 1:-1] - 2 * v[1:-1, 1:-1] + v[0:-2, 1:-1]) / dy / dy  - (u[1:-1, 1:-1] * phin[1:-1, 1:-1] - u[0:-2, 1:-1] * phin[0:-2, 1:-1]) / dx - (v[1:-1, 1:-1] * phin[1:-1, 1:-1] - v[1:-1, 0:-2] * phin[1:-1, 0:-2]) / dy)
+        
+        #u[1:-1, 1:-1] = un[1:-1, 1:-1] + dt * ( -1 * (p[1:-1, 1:-1] - p[0:-2, 1:-1])/dx + Pr / np.sqrt(Ra) * (un[2:, 1:-1] - 2 * un[1:-1, 1:-1] + un[:-2, 1:-1]) / dx / dx - un[1:-1, 1:-1] * (un[1:-1, 1:-1] - un[0:-2, 1:-1]) / dx - vn[1:-1, 1:-1] * (un[1:-1, 1:-1] - un[1:-1, 0:-2]) / dy )
+
+        #v[1:-1,1:-1] = vn[1:-1, 1:-1] + dt * ( -1 * (p[1:-1, 1:-1] - p[1:-1, 0:-2])/dy + Pr/np.sqrt(Ra) * (vn[1:-1, 2:] - 2 * vn[1:-1, 1:-1] + vn[1:-1, 0:-2]) / dy / dy - un[1:-1, 1:-1] * (vn[1:-1, 1:-1] - vn[0:-2, 1:-1]) / dx - vn[1:-1, 1:-1] * (vn[1:-1, 1:-1] - vn[1:-1, 0:-2]) / dy ) + phi[1:-1,1:-1] * Pr
+        
+        u[1:-1, 1:-1] = (un[1:-1, 1:-1]-
+                         un[1:-1, 1:-1] * dt / dx *
+                        (un[1:-1, 1:-1] - un[1:-1, 0:-2]) -
+                         vn[1:-1, 1:-1] * dt / dy *
+                        (un[1:-1, 1:-1] - un[0:-2, 1:-1]) -
+                         dt / (2 * rho * dx) * (p[1:-1, 2:] - p[1:-1, 0:-2]) +
+                         nu * (dt / dx**2 *
+                        (un[1:-1, 2:] - 2 * un[1:-1, 1:-1] + un[1:-1, 0:-2]) +
+                         dt / dy**2 *
+                        (un[2:, 1:-1] - 2 * un[1:-1, 1:-1] + un[0:-2, 1:-1])))
+
+        v[1:-1,1:-1] = (vn[1:-1, 1:-1] -
+                        un[1:-1, 1:-1] * dt / dx *
+                       (vn[1:-1, 1:-1] - vn[1:-1, 0:-2]) -
+                        vn[1:-1, 1:-1] * dt / dy *
+                       (vn[1:-1, 1:-1] - vn[0:-2, 1:-1]) -
+                        dt / (2 * rho * dy) * (p[2:, 1:-1] - p[0:-2, 1:-1]) +
+                        nu * (dt / dx**2 *
+                       (vn[1:-1, 2:] - 2 * vn[1:-1, 1:-1] + vn[1:-1, 0:-2]) +
+                        dt / dy**2 *
+                       (vn[2:, 1:-1] - 2 * vn[1:-1, 1:-1] + vn[0:-2, 1:-1]))) + Pr * phin[1:-1, 1:-1]
 
         u[0, :] = 0
         u[:, 0] = 0
@@ -83,23 +112,24 @@ def cavity_flow(nt, u, v, dt, dx, dy, p, rho, nu):
         v[:, -1] = 0
         
         
-    return u, v, p
+    return u, v, p, phi
 
 
 u = np.zeros((ny, nx))
 v = np.zeros((ny, nx))
 p = np.zeros((ny, nx))
 b = np.zeros((ny, nx))
+phi = np.zeros((ny, nx))
 nt = 1000
-u, v, p = cavity_flow(nt, u, v, dt, dx, dy, p, rho, nu)
+u, v, p, phi = cavity_flow(nt, u, v, dt, dx, dy, p, rho, nu, phi)
 
 
 fig = plt.figure(figsize=(11,7), dpi=100)
 # plotting the pressure field as a contour
-plt.contourf(X, Y, p, alpha=0.5, cmap=plt.cm.viridis)  
+plt.contourf(X, Y, phi, alpha=0.5, cmap=plt.cm.viridis)  
 plt.colorbar()
 # plotting the pressure field outlines
-plt.contour(X, Y, p, cmap=plt.cm.viridis)  
+plt.contour(X, Y, phi, cmap=plt.cm.viridis)  
 # plotting velocity field
 plt.quiver(X[::2, ::2], Y[::2, ::2], u[::2, ::2], v[::2, ::2]) 
 plt.xlabel('X')
