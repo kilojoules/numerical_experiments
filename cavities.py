@@ -4,8 +4,8 @@ from matplotlib import pyplot as plt
 
 nx = 41
 ny = 41
-nt = 500
-nit = 50
+nit = 500 # Number of iterations for pressure eqn
+nt = 4000 # Number of outer iterations
 c = 1
 dx = 2 / (nx - 1.)
 dy = 2 / (ny - 1.)
@@ -27,7 +27,7 @@ phi = np.zeros((ny, nx))
 b = np.zeros((ny, nx))
 
 # helper function. These terms are part of the posson equation.
-@nb.jit
+@nb.jit(parallel=True)
 def build_up_b(b, rho, dt, u, v, dx, dy):
     
     b[1:-1, 1:-1] = (rho * (1 / dt * 
@@ -40,7 +40,7 @@ def build_up_b(b, rho, dt, u, v, dx, dy):
 
     return b
 
-@nb.jit
+@nb.jit(parallel=True)
 def pressure_poisson(p, dx, dy, b):
     pn = np.empty_like(p)
     pn = p.copy()
@@ -60,7 +60,7 @@ def pressure_poisson(p, dx, dy, b):
         
     return p
 
-@nb.jit
+@nb.jit(parallel=True)
 def cavity_flow(nt, u, v, dt, dx, dy, p, rho, nu, phi):
     un = np.empty_like(u)
     vn = np.empty_like(v)
@@ -133,16 +133,18 @@ p = np.zeros((ny, nx))
 b = np.zeros((ny, nx))
 phi = np.ones((ny, nx)) #+ np.random.normal(5, 1, (ny,nx))
 phi[0:,0:2] = 1.1
-nt = 4000
 u, v, p, phi = cavity_flow(nt, u, v, dt, dx, dy, p, rho, nu, phi)
 
 
 fig = plt.figure(figsize=(11,7), dpi=100)
 # plotting the pressure field as a contour
-plt.contourf(X, Y, phi, alpha=0.5, cmap=plt.cm.viridis)  
-plt.colorbar()
-# plotting the pressure field outlines
-plt.contour(X, Y, phi, cmap=plt.cm.viridis)  
+c = plt.contourf(X, Y, p, alpha=0.5, cmap=plt.cm.viridis)  
+cb = fig.colorbar(c)
+cb.set_label('Pressure')
+# plotting the temperature field outlines
+c = plt.contour(X, Y, phi, cmap=plt.cm.coolwarm)  
+cb = fig.colorbar(c)
+cb.set_label('Temperature')
 # plotting velocity field
 plt.quiver(X[::2, ::2], Y[::2, ::2], u[::2, ::2], v[::2, ::2]) 
 plt.xlabel('X')
