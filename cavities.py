@@ -4,8 +4,8 @@ from matplotlib import pyplot as plt
 
 nx = 41
 ny = 41
-nit = 500 # Number of iterations for pressure eqn
-nt = 4000 # Number of outer iterations
+nit = 50 # Number of iterations for pressure eqn
+nt = 200000 # Number of outer iterations
 c = 1
 dx = 2 / (nx - 1.)
 dy = 2 / (ny - 1.)
@@ -17,7 +17,7 @@ rho = 1
 nu = .1
 dt = .001
 
-Pr = 1e-4
+Pr = 1e-5/1.4/rho
 Ra = 1e-4
 
 u = np.zeros((ny, nx))
@@ -73,25 +73,20 @@ def cavity_flow(nt, u, v, dt, dx, dy, p, rho, nu, phi):
         
         b = build_up_b(b, rho, dt, u, v, dx, dy)
         p = pressure_poisson(p, dx, dy, b)
-        #p = rho * un[:, :] ** 2 + vn[:, :] ** 2
-
-        #phi[1:-1, 1:-1] = phin[1:-1, 1:-1] + dt * (1/np.sqrt(Ra) * (u[2:, 1:-1] - 2 * u[1:-1, 1:-1] + u[0:-2, 1:-1]) / dx / dx + (v[2:, 1:-1] - 2 * v[1:-1, 1:-1] + v[0:-2, 1:-1]) / dy / dy  - (u[1:-1, 1:-1] * phin[1:-1, 1:-1] - u[0:-2, 1:-1] * phin[0:-2, 1:-1]) / dx - (v[1:-1, 1:-1] * phin[1:-1, 1:-1] - v[1:-1, 0:-2] * phin[1:-1, 0:-2]) / dy)
-        
-        #u[1:-1, 1:-1] = un[1:-1, 1:-1] + dt * ( -1 * (p[1:-1, 1:-1] - p[0:-2, 1:-1])/dx + Pr / np.sqrt(Ra) * (un[2:, 1:-1] - 2 * un[1:-1, 1:-1] + un[:-2, 1:-1]) / dx / dx - un[1:-1, 1:-1] * (un[1:-1, 1:-1] - un[0:-2, 1:-1]) / dx - vn[1:-1, 1:-1] * (un[1:-1, 1:-1] - un[1:-1, 0:-2]) / dy )
-
-        #v[1:-1,1:-1] = vn[1:-1, 1:-1] + dt * ( -1 * (p[1:-1, 1:-1] - p[1:-1, 0:-2])/dy + Pr/np.sqrt(Ra) * (vn[1:-1, 2:] - 2 * vn[1:-1, 1:-1] + vn[1:-1, 0:-2]) / dy / dy - un[1:-1, 1:-1] * (vn[1:-1, 1:-1] - vn[0:-2, 1:-1]) / dx - vn[1:-1, 1:-1] * (vn[1:-1, 1:-1] - vn[1:-1, 0:-2]) / dy ) + phi[1:-1,1:-1] * Pr
 
         phi[1:-1, 1:-1] = (phin[1:-1, 1:-1] + 
-                          dt * ( 
-                            .001 * ((phin[2:, 1:-1] - 2 * phin[1:-1, 1:-1] + phin[0:-2, 1:-1]) / dy / dy + 
+                           dt * ( 
+                             1e-1 * ((phin[2:, 1:-1] - 2 * phin[1:-1, 1:-1] + phin[0:-2, 1:-1]) / dy / dy + 
                             (phin[1:-1, 2:] - 2 * phin[1:-1, 1:-1] + phin[1:-1, 0:-2]) / dx / dx ) -
                             v[1:-1, 1:-1] *(phin[1:-1, 1:-1] - phin[0:-2, 1:-1]) / dy - 
                             u[1:-1, 1:-1] *(phin[1:-1, 1:-1] - phin[1:-1, 0:-2]) / dx))
-        phi[0:,0:2] = 1.1
-        #phi[0, :] = 1
-        #phi[0:,0:10] = 1.1        
+        phi[:, -1] = 400.
+        phi[-1, :] = 400.
+        phi[:, 0] = 450.
+        phi[0, :] = 400.
 
-        u[1:-1, 1:-1] = (un[1:-1, 1:-1]-
+        if n > 50:
+            u[1:-1, 1:-1] = (un[1:-1, 1:-1]-
                          un[1:-1, 1:-1] * dt / dx *
                         (un[1:-1, 1:-1] - un[1:-1, 0:-2]) -
                          vn[1:-1, 1:-1] * dt / dy *
@@ -102,7 +97,7 @@ def cavity_flow(nt, u, v, dt, dx, dy, p, rho, nu, phi):
                          dt / dy**2 *
                         (un[2:, 1:-1] - 2 * un[1:-1, 1:-1] + un[0:-2, 1:-1])))
 
-        v[1:-1,1:-1] = (vn[1:-1, 1:-1] -
+            v[1:-1,1:-1] = (vn[1:-1, 1:-1] -
                         un[1:-1, 1:-1] * dt / dx *
                        (vn[1:-1, 1:-1] - vn[1:-1, 0:-2]) -
                         vn[1:-1, 1:-1] * dt / dy *
@@ -111,17 +106,17 @@ def cavity_flow(nt, u, v, dt, dx, dy, p, rho, nu, phi):
                         nu * (dt / dx**2 *
                        (vn[1:-1, 2:] - 2 * vn[1:-1, 1:-1] + vn[1:-1, 0:-2]) +
                         dt / dy**2 *
-                       (vn[2:, 1:-1] - 2 * vn[1:-1, 1:-1] + vn[0:-2, 1:-1]))) #+ Pr * (phin[1:-1, 1:-1] - .2)
+                       (vn[2:, 1:-1] - 2 * vn[1:-1, 1:-1] + vn[0:-2, 1:-1]))+ Pr * (phin[1:-1, 1:-1]))
 
 
-        u[0, :] = 0
-        u[:, 0] = 0
-        u[:, -1] = 0
-        u[-1, :] = 1    #set velocity on cavity lid equal to 1
-        v[0, :] = 0
-        v[-1, :]=0
-        v[:, 0] = 0
-        v[:, -1] = 0
+            u[0, :] = 0
+            u[:, 0] = 0
+            u[:, -1] = 0
+            u[-1, :] = 2    #set velocity on cavity lid equal to 1
+            v[0, :] = 0
+            v[-1, :]=0
+            v[:, 0] = 0
+            v[:, -1] = 0
         
         
     return u, v, p, phi
@@ -131,8 +126,8 @@ u = np.zeros((ny, nx))
 v = np.zeros((ny, nx))
 p = np.zeros((ny, nx))
 b = np.zeros((ny, nx))
-phi = np.ones((ny, nx)) #+ np.random.normal(5, 1, (ny,nx))
-phi[0:,0:2] = 1.1
+phi = np.ones((ny, nx)) * 400. #+ np.random.normal(5, 1, (ny,nx))
+phi[0:,0:2] = 450.
 u, v, p, phi = cavity_flow(nt, u, v, dt, dx, dy, p, rho, nu, phi)
 
 
@@ -142,7 +137,7 @@ c = plt.contourf(X, Y, p, alpha=0.5, cmap=plt.cm.viridis)
 cb = fig.colorbar(c)
 cb.set_label('Pressure')
 # plotting the temperature field outlines
-c = plt.contour(X, Y, phi, cmap=plt.cm.coolwarm)  
+c = plt.contour(X, Y, phi, 25, cmap=plt.cm.coolwarm)  
 cb = fig.colorbar(c)
 cb.set_label('Temperature')
 # plotting velocity field
@@ -150,4 +145,4 @@ plt.quiver(X[::2, ::2], Y[::2, ::2], u[::2, ::2], v[::2, ::2])
 plt.xlabel('X')
 plt.ylabel('Y')
 
-plt.show()
+plt.savefig('./out.pdf')
