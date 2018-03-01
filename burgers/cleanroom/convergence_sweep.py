@@ -9,11 +9,13 @@ nxs  = [25 * 2 ** ii for ii in range(10)]
 
 flows = {}
 books = {}
+maxx = 0
 for nu in nus:
     flows[nu] = {}
     books[nu] = {}
     lastx = None
     nx = 25
+    ii = 1
     while True:
         print 'nx ', nx, '   nu ', nu
         x = np.linspace(0., xf, nx)
@@ -23,23 +25,27 @@ for nu in nus:
         books[nu][nx] = np.max(np.abs(np.gradient(flows[nu][nx][:, -1], dx)))
         if lastx:
              res = np.abs(np.max(np.abs(np.gradient(flows[nu][lastx][:, -1], lastdx))) - np.max(np.abs(np.gradient(flows[nu][nx][:, -1], dx)))) / np.max(np.abs(np.gradient(flows[nu][nx][:, -1], dx)))
-             if res < 0.05:
+             if res < 0.025:
                  break
         if lastx: print 'res ', res
         lastx = nx
         lastdx = dx
-        nx *= 1.2
-maxx = max([len(flows[nu].keys()) for nu in nus])
-colors = plt.cm.viridis(np.linspace(0, 1, maxx))
+        nx = int(nx * 1.2)
+        ii += 1
+        if ii > maxx: maxx = ii
+#maxx = max([len(flows[nu].keys()) for nu in nus])
+colors = plt.cm.plasma(np.linspace(0, 1, maxx))
+nx = 25
 for ii in range(maxx):
-    nx = sorted(flows[nus[-1]].keys())[ii]
     x = np.linspace(0., xf, nx)
     dx = x[1] - x[0]
-    plt.scatter([nu for nu in nus if nx in flows[nu]], np.array([maxgrad(flows[nu][nx], dx) for nu in nus if nx in flows[nu]]), marker='x', label="%i x-points"%nx, c=colors[ii])
-    #plt.plot([nu for nu in nus if nx in flows[nu]], np.array([maxgrad(flows[nu][nx], dx) for nu in nus if nx in flows[nu]]), marker='x', label="%i x-points"%nx, c=colors[ii])
+    thesenus = np.array([nu for nu in nus if nx in flows[nu]])
+    maxgs = np.array([maxgrad(flows[nu][nx], dx) for nu in thesenus])
+    s = plt.scatter(thesenus, maxgs, marker='x', label="%i x-points"%nx, color=colors[ii])
+    nx = int(nx * 1.2)
 
 plt.xlabel(r"$\nu$")
-plt.ylabel(r"max($\nabla |u|$)")
+plt.ylabel(r"max($|\nabla u|$)")
 LGD = plt.legend(prop={'size':14}, ncol=3, bbox_to_anchor=[1, -.1])
 plt.xscale('log')
 plt.yscale('log')

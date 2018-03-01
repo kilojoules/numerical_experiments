@@ -13,7 +13,7 @@ dx = x[1] - x[0]
 # when should I evolve it to (default)
 evolution_time = 1
 
-@nb.jit
+#@nb.jit
 def geturec(nu=.05, x=x, evolution_time=evolution_time, u0=0, n_save_t=500, ub=1):
 
     # Prescribde c=.1 and cfts=.3
@@ -45,8 +45,21 @@ def geturec(nu=.05, x=x, evolution_time=evolution_time, u0=0, n_save_t=500, ub=1
     #for _ in nb.prange(nt): - BEWARE
         un = u.copy()
 
-        # Dirchlet BCs
-        u[1:-1] = un[1:-1] + dt *(-1 * un[1:-1] * (un[1:-1] - un[:-2]) / dx + nu * (un[2:] - 2 * un[1:-1] + un[:-2]) / dx**2 )
+        # Dirchlet BCs, 2-term-upwind convective, 3-term central viscous
+        #u[1:-1] = un[1:-1] + dt *(-1 * un[1:-1] * (un[1:-1] - un[:-2]) / dx + nu * (un[2:] - 2 * un[1:-1] + un[:-2]) / dx**2 )
+
+        # Dirchlet BCs, 2-term central convective, 3-term central viscous
+        #u[1:-1] = un[1:-1] + dt *(-1 * un[1:-1] * (un[2:] - un[:-2]) / (2 * dx) + nu * (un[2:] - 2 * un[1:-1] + un[:-2]) / dx**2 )
+
+        # Dirchlet BCs, 3-term-upwind convective, 3-term central viscous
+        #u[1] = un[1] + dt *(-1 * un[1] * (un[1] - un[0]) / dx + nu * (un[2] - 2 * un[1] + un[0]) / dx**2 )
+        #u[-2] = un[-2] + dt *(-1 * un[-2] * (un[-1] - un[-2]) / dx + nu * (un[-1] - 2 * un[-2] + un[-3]) / dx**2 )
+        #u[2:-2] = un[2:-2] + dt *(-1 * un[2:-2] * (3 * un[2:-2] - 4 *  un[1:-3] + u[:-4]) / dx + nu * (un[3:-1] - 2 * un[2:-2] + un[1:-3]) / dx**2 )
+
+        # Dirchlet BCs, 4-term-central convective, 3-term central viscous
+        u[1] = un[1] + dt *(-1 * un[1] * (un[2] - un[0]) / (2 * dx) + nu * (un[2] - 2 * un[1] + un[0]) / dx**2 )
+        u[-2] = un[-2] + dt *(-1 * un[-2] * (un[-3] - un[-2]) / (2 * dx) + nu * (un[-1] - 2 * un[-2] + un[-3]) / dx**2 )
+        u[2:-2] = un[2:-2] + dt *(-1 * un[2:-2] * (-1 * un[4:] + 8 * un[3:-1]  - 8 * u[1:-3] + u[:-4]) / ( 12 * dx ) + nu * (un[3:-1] - 2 * un[2:-2] + un[1:-3]) / dx**2 )
 
         # Periodic BCs
         #u[1:-1] = un[1:-1] + dt *( -1 * un[1:-1] * (un[1:-1] - un[:-2]) / dx + nu * (un[2:] - 2 * un[1:-1] + un[:-2]) / dx**2 )
