@@ -4,7 +4,7 @@ from solver import geturec, xf
 
 def maxgrad(u, dx): return np.max(np.abs(np.gradient(u[:-2, -1], dx)))
 
-nus = np.array([1, .5, .3, .1, .05, 0.02, .01, .005])
+nus = np.array([1, .5, .3, .1, .05, .04, .03, 0.02, .015, .01, .005])
 nxs  = [25 * 2 ** ii for ii in range(10)]
 
 strategynames = {'4c': "4-term central", '3u': "3-term upwind", '2c': "2-term central", '2u':"2-term upwind"}
@@ -13,9 +13,9 @@ xofnurecord = {}
 
 previouspoints = {}
 
-for TOL in [0.1, .05, .025, .015]:
+for TOL in [.05, .02]:
     xofnurecord[TOL] = {}
-    for strategy in ['2u', '2c', '3u', '4c']:
+    for strategy in ['2u', '2c', '3u', '4c', 'rk']:
         flows = {}
         books = {}
         maxx = 0
@@ -59,7 +59,7 @@ for TOL in [0.1, .05, .025, .015]:
             thesenus = np.array([nu for nu in nus if nx in flows[nu]])
             maxgs = np.array([maxgrad(flows[nu][nx], dx) for nu in thesenus])
             s = plt.scatter(thesenus, maxgs, marker='x', label="%i x-points"%nx, color=colors[ii])
-            nx = int(nx * 1.2)
+            nx = int(nx * 1.1)
         
         plt.xlabel(r"$\nu$")
         plt.ylabel(r"max($|\nabla u|$)")
@@ -78,12 +78,12 @@ for TOL in [0.1, .05, .025, .015]:
 
 fig, ax = plt.subplots()
 TOLs = xofnurecord.keys()
-strats = strategynames.keys()
+strats = ['2u', '2c', '3u', '4c']
 MS = ['x', '^', 'o', 'p']
-colors = plt.cm.plasma(np.linspace(0, 1, len(strategynames.keys())))
+colors = plt.cm.coolwarm(np.linspace(0, 1, len(TOLs)))
 for ii in range(len(TOLs)):
     for jj in range(len(strats)):
-        ax.plot(nus, xofnurecord[TOLs[ii]][strats[jj]], c=colors[ii], marker=MS[jj], ms=4)
+        ax.plot(nus, xofnurecord[TOLs[ii]][strats[jj]], c=colors[ii], marker=MS[jj], ms=8)
 from matplotlib.lines import Line2D
 custom_lines = []
 nams = []
@@ -92,7 +92,7 @@ for jj in range(len(strats)):
     nams.append(strategynames[strats[jj]])
 for ii in range(len(TOLs)):
     custom_lines.append(Line2D([0], [0], color=colors[ii], lw=4))
-    nams.append("Tolereance = %.3f"%TOLs[ii])
+    nams.append("Tolereance = %.4f"%TOLs[ii])
 LGD = ax.legend(custom_lines, nams, bbox_to_anchor=[1, -.1], prop={'size':14})
 ax.set_xlabel(r"$\nu$")
 ax.set_ylabel("Required Number of x-points")

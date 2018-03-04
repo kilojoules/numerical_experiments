@@ -13,8 +13,8 @@ dx = x[1] - x[0]
 # when should I evolve it to (default)
 evolution_time = 1
 
-@nb.jit
-def geturec(nu=.05, x=x, evolution_time=evolution_time, u0=0, n_save_t=500, ub=1, strategy='4c'):
+#@nb.jit
+def geturec(nu=.05, x=x, evolution_time=evolution_time, u0=None, n_save_t=500, ub=1, strategy='4c'):
 
     # Prescribde c=.1 and cfts=.3
     dx = x[1] - x[0]
@@ -25,7 +25,7 @@ def geturec(nu=.05, x=x, evolution_time=evolution_time, u0=0, n_save_t=500, ub=1
 
     # initially purturb u
     u_initial = ub + .8 * np.sin(x)
-    if u0: u_initial = u0
+    if u0 is not None: u_initial = u0
     #u_initial = 1 + .2 * np.sin(x) #+ 0.3 * np.sin(x * 3)
     u = u_initial.copy()
     u[[0, -1]] = ub
@@ -48,6 +48,7 @@ def geturec(nu=.05, x=x, evolution_time=evolution_time, u0=0, n_save_t=500, ub=1
         # Dirchlet BCs, 2-term-upwind convective, 3-term central viscous
         if strategy == '2u':
             u[1:-1] = un[1:-1] + dt *(-1 * un[1:-1] * (un[1:-1] - un[:-2]) / dx + nu * (un[2:] - 2 * un[1:-1] + un[:-2]) / dx**2 )
+
         # Dirchlet BCs, 2-term central convective, 3-term central viscous
         elif strategy == '2c':
             u[1:-1] = un[1:-1] + dt *(-1 * un[1:-1] * (un[2:] - un[:-2]) / (2 * dx) + nu * (un[2:] - 2 * un[1:-1] + un[:-2]) / dx**2 )
@@ -56,14 +57,47 @@ def geturec(nu=.05, x=x, evolution_time=evolution_time, u0=0, n_save_t=500, ub=1
         elif strategy == '3u':
             u[1] = un[1] + dt *(-1 * un[1] * (un[1] - un[0]) / dx + nu * (un[2] - 2 * un[1] + un[0]) / dx**2 )
             u[-2] = un[-2] + dt *(-1 * un[-2] * (un[-1] - un[-2]) / dx + nu * (un[-1] - 2 * un[-2] + un[-3]) / dx**2 )
-            u[2:-2] = un[2:-2] + dt *(-1 * un[2:-2] * (3 * un[2:-2] - 4 *  un[1:-3] + u[:-4]) / dx + nu * (un[3:-1] - 2 * un[2:-2] + un[1:-3]) / dx**2 )
+            u[2:-2] = un[2:-2] + dt *(-1 * un[2:-2] * (3 * un[2:-2] - 4 *  un[1:-3] + un[:-4]) / (2 * dx) + nu * (un[3:-1] - 2 * un[2:-2] + un[1:-3]) / dx**2 )
 
         # Dirchlet BCs, 4-term-central convective, 3-term central viscous
         elif strategy == '4c':
             u[1] = un[1] + dt *(-1 * un[1] * (un[2] - un[0]) / (2 * dx) + nu * (un[2] - 2 * un[1] + un[0]) / dx**2 )
-            u[-2] = un[-2] + dt *(-1 * un[-2] * (un[-3] - un[-2]) / (2 * dx) + nu * (un[-1] - 2 * un[-2] + un[-3]) / dx**2 )
-            u[2:-2] = un[2:-2] + dt *(-1 * un[2:-2] * (-1 * un[4:] + 8 * un[3:-1]  - 8 * u[1:-3] + u[:-4]) / ( 12 * dx ) + nu * (un[3:-1] - 2 * un[2:-2] + un[1:-3]) / dx**2 )
+            u[-2] = un[-2] + dt *(-1 * un[-2] * (un[-1] - un[-3]) / (2 * dx) + nu * (un[-1] - 2 * un[-2] + un[-3]) / dx**2 )
+            u[2:-2] = un[2:-2] + dt *(-1 * un[2:-2] * (-1 * un[4:] + 8 * un[3:-1]  - 8 * un[1:-3] + un[:-4]) / ( 12 * dx ) + nu * (un[3:-1] - 2 * un[2:-2] + un[1:-3]) / dx**2 )
+
+        # Dirchlet BCs, Lax-Wendroff Method
+        elif strategy == 'lw':
+            ustarm2 = un[1:-5] - dt/dx * ((nu * (un[3:-3] - un[1:-5]) / (2 * dx) - 0.5 * un[2:-4] ** 2) - (nu * (un[2:-4] - un[:-6]) / (2 * dx) - 0.5 * un[1:-5] ** 2))
+            ustarm1 = un[2:-4] - dt/dx * ((nu * (un[4:-2] - un[2:-4]) / (2 * dx) - 0.5 * un[3:-3] ** 2) - (nu * (un[3:-3] - un[1:-5]) / (2 * dx) - 0.5 * un[2:-4] ** 2))
+            ustar0  = un[3:-3] - dt/dx * ((nu * (un[5:-1] - un[3:-3]) / (2 * dx) - 0.5 * un[4:-2] ** 2) - (nu * (un[4:-2] - un[2:-4]) / (2 * dx) - 0.5 * un[3:-3] ** 2))
+            ustar1  = un[4:-2] - dt/dx * ((nu * (un[6:] - un[4:-2]) / (2 * dx) - 0.5 * un[5:-1] ** 2) - (nu * (un[5:-1] - un[3:-3]) / (2 * dx) - 0.5 * un[4:-2] ** 2))
+            #u[1] =  un[1]  + dt *(-1 * un[1] *  (un[2] - un[0]) / (2 * dx) + nu * (un[2] - 2 * un[1] + un[0]) / dx**2 )
+            #u[2] =  un[2]  + dt *(-1 * un[2] *  (un[3] - un[1]) / (2 * dx) + nu * (un[3] - 2 * un[2] + un[1]) / dx**2 )
+            #u[-2] = un[-2] + dt *(-1 * un[-2] * (un[-1] - un[-3]) / (2 * dx) + nu * (un[-3] - 2 * un[-2] + un[-1]) / dx**2 )
+            #u[-3] = un[-3] + dt *(-1 * un[-3] * (un[-2] - un[-4]) / (2 * dx) + nu * (un[-4] - 2 * un[-3] + un[-2]) / dx**2 )
+            u[1] = un[1] + dt *(-1 * un[1] * (un[1] - un[0]) / dx + nu * (un[2] - 2 * un[1] + un[0]) / dx**2 )
+            u[2] = un[2] + dt *(-1 * un[2] * (un[2] - un[1]) / dx + nu * (un[3] - 2 * un[2] + un[1]) / dx**2 )
+            u[-3] = un[-3] + dt *(-1 * un[-3] * (un[-2] - un[-3]) / dx + nu * (un[-2] - 2 * un[-3] + un[-4]) / dx**2 )
+            u[-2] = un[-2] + dt *(-1 * un[-2] * (un[-1] - un[-2]) / dx + nu * (un[-1] - 2 * un[-2] + un[-3]) / dx**2 )
+            u[3:-3] = 0.5 * (un[3:-3] + ustar0) - dt / 2 / dx * (( nu * (ustar1 - ustarm1) / (2 * dx) - .5 * ustar0 ** 2 ) - (nu * (ustar0 - ustarm2) / (2 * dx) - 0.5 * ustarm1 ** 2))
+
+        elif strategy == 'rlw':
+            um1 = 0.5 * (un[3:-3] + un[4:-2]) - dt / dx / 2 * (((un[5:-1] - un[3:-3])/(2 * dx) - 0.5 * un[4:-2] ** 2) - ((un[4:-2] - un[2:-4]) / (2 * dx) - un[3:-3] ** 2))
+            um2 = 0.5 * (un[2:-4] + un[3:-3]) - dt / dx / 2 * (((un[4:-2] - un[2:-4])/(2 * dx) - 0.5 * un[3:-3] ** 2) - ((un[3:-3] - un[1:-5]) / (2 * dx) - un[2:-4] ** 2))
+            um3 = 0.5 * (un[1:-5] + un[2:-4]) - dt / dx / 2 * (((un[3:-3] - un[1:-5])/(2 * dx) - 0.5 * un[2:-4] ** 2) - ((un[2:-4] - un[:-6]) / (2 * dx) - un[1:-5] ** 2))
+            u[3:-3] = un[3:-3] - dt / dx * ((nu * (um1 - um2) / 2 / dx - um1 ** 2 ) - (nu * (um2 - um3) / 2 / dx - um2 ** 2))
+            
+        elif strategy == 'rk':
+            u[1] = un[1] + dt *(-1 * un[1] * (un[2] - un[0]) / (2 * dx) + nu * (un[2] - 2 * un[1] + un[0]) / dx**2 )
+            u[-2] = un[-2] + dt *(-1 * un[-2] * (un[-1] - un[-3]) / (2 * dx) + nu * (un[-1] - 2 * un[-2] + un[-3]) / dx**2 )
+            uh = un.copy()
+            uh[1] = un[1] + dt/2 *(-1 * un[1] * (un[2] - un[0]) / (2 * dx) + nu * (un[2] - 2 * un[1] + un[0]) / dx**2 )
+            uh[-2] = un[-2] + dt/2 *(-1 * un[-2] * (un[-1] - un[-3]) / (2 * dx) + nu * (un[-1] - 2 * un[-2] + un[-3]) / dx**2 )
+            uh[2:-2] = un[2:-2] + dt / 2 *(-1 * un[2:-2] * (-1 * un[4:] + 8 * un[3:-1]  - 8 * un[1:-3] + un[:-4]) / ( 12 * dx ) + nu * (un[3:-1] - 2 * un[2:-2] + un[1:-3]) / dx**2 )
+            u[2:-2] = un[2:-2] + .5 * dt *(-1 * un[2:-2] * (-1 * un[4:] + 8 * un[3:-1]  - 8 * un[1:-3] + un[:-4]) / ( 12 * dx ) + nu * (un[3:-1] - 2 * un[2:-2] + un[1:-3]) / dx**2 -1 * uh[2:-2] * (-1 * uh[4:] + 8 * uh[3:-1]  - 8 * uh[1:-3] + uh[:-4]) / ( 12 * dx ) + nu * (uh[3:-1] - 2 * uh[2:-2] + uh[1:-3]) / dx**2 )
+           
         else: raise(IOError("Bad Strategy"))
+
 
         # Periodic BCs
         #u[1:-1] = un[1:-1] + dt *( -1 * un[1:-1] * (un[1:-1] - un[:-2]) / dx + nu * (un[2:] - 2 * un[1:-1] + un[:-2]) / dx**2 )

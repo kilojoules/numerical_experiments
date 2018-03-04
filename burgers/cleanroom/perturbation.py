@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from solver import geturec, xf
+from scipy.optimize import minimize as mini
 x = np.linspace(0., xf, 7000)
 
 ub = 1
@@ -8,10 +9,16 @@ ub = 1
 u = geturec(x=x, nu=.01, u0= ub + .8 * np.sin(x))
 
 def pert(u0, u, pltnam):
-    plt.plot(x, u[:, 0], label='Baseline Initial', lw=3)
-    plt.plot(x, u0[:, 0], label='Perturbed Initial', ls='--', lw=3)
-    plt.plot(x, u[:, -1], label='Baseline Final', lw=3)
-    plt.plot(x, u0[:, -1], label='Perturbed Final', ls='--', lw=3)
+    def fitness(a):
+       return (u.sum() - a * u0.sum()) ** 2    
+    a = mini(fitness, [1]).x
+    print u.sum(), a * u0.sum(), a
+    up = a * u0
+
+    plt.plot(x, u[:, 0], label='Baseline Initial', lw=3, c='cornflowerblue')
+    plt.plot(x, up[:, 0], label='Perturbed Initial', ls='--', lw=3, c='salmon')
+    plt.plot(x, u[:, -1], label='Baseline Final', lw=3, c='indigo')
+    plt.plot(x, up[:, -1], label='Perturbed Final', ls='--', lw=3, c='firebrick')
     plt.xlabel('x')
     plt.ylabel('u')
     lgd = plt.legend(loc='lower center', bbox_to_anchor=[1.2, .5])
@@ -40,16 +47,16 @@ us = []
 u0s = []
 for nu in nus:
     us.append(geturec(x=x, nu=nu, u0=1 + .8 * np.sin(x)))
-    u0s.append(geturec(x=x, nu=nu, u0=1 + .5 * np.sin(7 * x) + .8 * np.sin(x)))
+    u0s.append(geturec(x=x, nu=nu, u0= 0.97 * (1 + .5 * np.sin(7 * x) + .8 * np.sin(x))))
 
 f, ax = plt.subplots(len(nus), figsize=(15, 15))
 plt.subplots_adjust(bottom=-0.3)
 lgds = []
 for ii in range(len(nus)):
-    ax[ii].plot(x, us[ii][:, 0], label="Baseline Initial", lw=4)
-    ax[ii].plot(x, u0s[ii][:, 0], ls='--', label="Perturbed Initial", lw=4)
-    ax[ii].plot(x, us[ii][:, -1], label="Baseline Final", lw=4)
-    ax[ii].plot(x, u0s[ii][:, -1], ls='--', label="Perturbed Final", lw=4)
+    ax[ii].plot(x, us[ii][:, 0], label="Baseline Initial", lw=4, c='cornflowerblue')
+    ax[ii].plot(x, u0s[ii][:, 0], ls='--', label="Perturbed Initial", lw=4, c='salmon')
+    ax[ii].plot(x, us[ii][:, -1], label="Baseline Final", lw=4, c='indigo')
+    ax[ii].plot(x, u0s[ii][:, -1], ls='--', label="Perturbed Final", lw=4, c='firebrick')
     ax[ii].set_xlabel('x', size=20)
     ax[ii].set_ylabel('u', size=20)
     ax[ii].set_title('nu = %.3f'%nus[ii], size=16)
