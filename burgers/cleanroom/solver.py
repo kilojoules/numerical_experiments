@@ -90,6 +90,7 @@ def geturec(nu=.05, x=x, evolution_time=evolution_time, u0=None, n_save_t=500, u
         elif strategy == 'rk':
             u[1] = un[1] + dt *(-1 * un[1] * (un[2] - un[0]) / (2 * dx) + nu * (un[2] - 2 * un[1] + un[0]) / dx**2 )
             u[-2] = un[-2] + dt *(-1 * un[-2] * (un[-1] - un[-3]) / (2 * dx) + nu * (un[-1] - 2 * un[-2] + un[-3]) / dx**2 )
+
             uh = un.copy()
             uh[1] = un[1] + dt/2 *(-1 * un[1] * (un[2] - un[0]) / (2 * dx) + nu * (un[2] - 2 * un[1] + un[0]) / dx**2 )
             uh[-2] = un[-2] + dt/2 *(-1 * un[-2] * (un[-1] - un[-3]) / (2 * dx) + nu * (un[-1] - 2 * un[-2] + un[-3]) / dx**2 )

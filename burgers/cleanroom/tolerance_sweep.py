@@ -7,15 +7,19 @@ def maxgrad(u, dx): return np.max(np.abs(np.gradient(u[:-2, -1], dx)))
 nus = np.array([1, .5, .3, .1, .05, .04, .03, 0.02, .015, .01, .005])
 nxs  = [25 * 2 ** ii for ii in range(10)]
 
-strategynames = {'4c': "4-term central", '3u': "3-term upwind", '2c': "2-term central", '2u':"2-term upwind"}
+strategynames = {'4c': "4-term central", '3u': "3-term upwind", '2c': "2-term central", '2u':"2-term upwind", 'rk': 'Runge-Kuta'}
 
 xofnurecord = {}
 
 previouspoints = {}
 
-for TOL in [.05, .02]:
+strats = ['4c', 'rk']
+#strats = ['2u', '2c', '3u', '4c', 'rk']
+
+for TOL in [.04, .02, .015]:
     xofnurecord[TOL] = {}
-    for strategy in ['2u', '2c', '3u', '4c', 'rk']:
+    for strategy in strats:
+    #for strategy in ['2u', '2c', '3u', '4c', 'rk']:
         flows = {}
         books = {}
         maxx = 0
@@ -78,17 +82,17 @@ for TOL in [.05, .02]:
 
 fig, ax = plt.subplots()
 TOLs = xofnurecord.keys()
-strats = ['2u', '2c', '3u', '4c']
-MS = ['x', '^', 'o', 'p']
+MS = ['o', 'P', '*', 'D', 'x']
 colors = plt.cm.coolwarm(np.linspace(0, 1, len(TOLs)))
 for ii in range(len(TOLs)):
+    colors[ii][-1] = 0.5
     for jj in range(len(strats)):
         ax.plot(nus, xofnurecord[TOLs[ii]][strats[jj]], c=colors[ii], marker=MS[jj], ms=8)
 from matplotlib.lines import Line2D
 custom_lines = []
 nams = []
 for jj in range(len(strats)):
-    custom_lines.append(Line2D([0], [0], color='k', marker=MS[jj], lw=1, ms=4))
+    custom_lines.append(Line2D([0], [0], color='k', marker=MS[jj], lw=1, ms=10))
     nams.append(strategynames[strats[jj]])
 for ii in range(len(TOLs)):
     custom_lines.append(Line2D([0], [0], color=colors[ii], lw=4))
