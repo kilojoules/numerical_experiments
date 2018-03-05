@@ -65,6 +65,12 @@ def geturec(nu=.05, x=x, evolution_time=evolution_time, u0=None, n_save_t=500, u
             u[-2] = un[-2] + dt *(-1 * un[-2] * (un[-1] - un[-3]) / (2 * dx) + nu * (un[-1] - 2 * un[-2] + un[-3]) / dx**2 )
             u[2:-2] = un[2:-2] + dt *(-1 * un[2:-2] * (-1 * un[4:] + 8 * un[3:-1]  - 8 * un[1:-3] + un[:-4]) / ( 12 * dx ) + nu * (un[3:-1] - 2 * un[2:-2] + un[1:-3]) / dx**2 )
 
+        # Dirchlet BCs, 4-term-central convective, 5-term central viscous
+        elif strategy == '4c5d':
+            u[1] = un[1] + dt *(-1 * un[1] * (un[2] - un[0]) / (2 * dx) + nu * (un[2] - 2 * un[1] + un[0]) / dx**2 )
+            u[-2] = un[-2] + dt *(-1 * un[-2] * (un[-1] - un[-3]) / (2 * dx) + nu * (un[-1] - 2 * un[-2] + un[-3]) / dx**2 )
+            u[2:-2] = un[2:-2] + dt *(-1 * un[2:-2] * (-1 * un[4:] + 8 * un[3:-1]  - 8 * un[1:-3] + un[:-4]) / ( 12 * dx ) + nu * (-1 * un[4:] + 16 * un[3:-1] - 30 * un[2:-2] + 16 * un[1:-3] - un[:-4]) / (12 * dx**2 ))
+
         # Dirchlet BCs, Lax-Wendroff Method
         elif strategy == 'lw':
             ustarm2 = un[1:-5] - dt/dx * ((nu * (un[3:-3] - un[1:-5]) / (2 * dx) - 0.5 * un[2:-4] ** 2) - (nu * (un[2:-4] - un[:-6]) / (2 * dx) - 0.5 * un[1:-5] ** 2))
@@ -88,6 +94,17 @@ def geturec(nu=.05, x=x, evolution_time=evolution_time, u0=None, n_save_t=500, u
             u[3:-3] = un[3:-3] - dt / dx * ((nu * (um1 - um2) / 2 / dx - um1 ** 2 ) - (nu * (um2 - um3) / 2 / dx - um2 ** 2))
             
         elif strategy == 'rk':
+            u[1] = un[1] + dt *(-1 * un[1] * (un[2] - un[0]) / (2 * dx) + nu * (un[2] - 2 * un[1] + un[0]) / dx**2 )
+            u[-2] = un[-2] + dt *(-1 * un[-2] * (un[-1] - un[-3]) / (2 * dx) + nu * (un[-1] - 2 * un[-2] + un[-3]) / dx**2 )
+
+            uh = un.copy()
+            uh[1] = un[1] + dt/2 *(-1 * un[1] * (un[2] - un[0]) / (2 * dx) + nu * (un[2] - 2 * un[1] + un[0]) / dx**2 )
+            uh[-2] = un[-2] + dt/2 *(-1 * un[-2] * (un[-1] - un[-3]) / (2 * dx) + nu * (un[-1] - 2 * un[-2] + un[-3]) / dx**2 )
+            uh[2:-2] = un[2:-2] + dt / 2 *(-1 * un[2:-2] * (-1 * un[4:] + 8 * un[3:-1]  - 8 * un[1:-3] + un[:-4]) / ( 12 * dx ) + nu * (un[3:-1] - 2 * un[2:-2] + un[1:-3]) / dx**2 )
+            u[2:-2] = un[2:-2] + .5 * dt *(-1 * un[2:-2] * (-1 * un[4:] + 8 * un[3:-1]  - 8 * un[1:-3] + un[:-4]) / ( 12 * dx ) + nu * (un[3:-1] - 2 * un[2:-2] + un[1:-3]) / dx**2 -1 * uh[2:-2] * (-1 * uh[4:] + 8 * uh[3:-1]  - 8 * uh[1:-3] + uh[:-4]) / ( 12 * dx ) + nu * (uh[3:-1] - 2 * uh[2:-2] + uh[1:-3]) / dx**2 )
+           
+        # 2-point time step, 4-point convective, 5-point diffusive    
+        elif strategy == 'final':
             u[1] = un[1] + dt *(-1 * un[1] * (un[2] - un[0]) / (2 * dx) + nu * (un[2] - 2 * un[1] + un[0]) / dx**2 )
             u[-2] = un[-2] + dt *(-1 * un[-2] * (un[-1] - un[-3]) / (2 * dx) + nu * (un[-1] - 2 * un[-2] + un[-3]) / dx**2 )
 

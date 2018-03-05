@@ -7,13 +7,13 @@ def maxgrad(u, dx): return np.max(np.abs(np.gradient(u[:-2, -1], dx)))
 nus = np.array([1, .5, .3, .1, .05, .04, .03, 0.02, .015, .01, .005])
 nxs  = [25 * 2 ** ii for ii in range(10)]
 
-strategynames = {'4c': "4-term central", '3u': "3-term upwind", '2c': "2-term central", '2u':"2-term upwind", 'rk': 'Runge-Kuta'}
+strategynames = {'4c': "4-term central", '3u': "3-term upwind", '2c': "2-term central", '2u':"2-term upwind", 'rk': 'Runge-Kuta', '4c5d':"4-term central with 5-term central difussion"}
 
 xofnurecord = {}
 
 previouspoints = {}
 
-strats = ['4c', 'rk']
+strats = ['4c5d', '4c']
 #strats = ['2u', '2c', '3u', '4c', 'rk']
 
 for TOL in [.04, .02, .015]:
