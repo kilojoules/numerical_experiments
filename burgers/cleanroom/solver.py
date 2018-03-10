@@ -14,7 +14,7 @@ dx = x[1] - x[0]
 evolution_time = 1
 
 #@nb.jit
-def geturec(nu=.05, x=x, evolution_time=evolution_time, u0=None, n_save_t=500, ub=1, strategy='4c'):
+def geturec(nu=.05, x=x, evolution_time=evolution_time, u0=None, n_save_t=500, ub=1, strategy='4c5d'):
 
     # Prescribde c=.1 and cfts=.3
     dx = x[1] - x[0]
