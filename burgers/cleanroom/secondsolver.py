@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 # x domain
 nx = 1000
-xf = np.pi
+xf = 1
 x = np.linspace(0., xf, nx)
 dx = x[1] - x[0]
 
@@ -79,7 +79,7 @@ def geturec(nu=.05, x=x, evolution_time=evolution_time, u0=None, n_save_t=500, u
     if divider ==0: raise(IOError("not enough time steps to save %i times"%n_save_t))
 
     # initially purturb u
-    u_initial = ubl + .8 * np.sin(x)
+    u_initial = ubl + .8 * np.sin(x * np.pi)
     if u0 is not None: u_initial = u0
     #u_initial = 1 + .2 * np.sin(x) #+ 0.3 * np.sin(x * 3)
     u = u_initial
@@ -128,7 +128,7 @@ def geturec(nu=.05, x=x, evolution_time=evolution_time, u0=None, n_save_t=500, u
             u = un + dt * dudt
         elif timestrategy == 'rk':
             uhalfn = un + dt * dudt / 2.
-            duhalfn_dt = convective_dudt(uhalfn, strategy=convstrategy) + diffusive_dudt(uhalfn, nu, strategy=diffstrategy)
+            duhalfn_dt = convective_dudt(uhalfn, dx, strategy=convstrategy) + diffusive_dudt(uhalfn, nu, dx, strategy=diffstrategy)
             u = un + 0.5 * dt * (dudt + duhalfn_dt)
         else: raise(IOError("Bad Strategy"))
 

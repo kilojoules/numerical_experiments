@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 from solver import geturec, xf, evolution_time
 from fd import d1, d2
 
-nx = 200
-nu = .05
+nx = 100
+nu = 1
 x = np.linspace(0, xf, nx)
 dx = x[1] - x[0]
 u_record = geturec(nu=nu, evolution_time = 1, x=x, strategy='4c')
@@ -19,7 +19,7 @@ print 'full model ran'
 psi, D, phi = np.linalg.svd(u_record) # P D Q is the approximation
 
 # choose # of modes to keep
-MODES = 13
+MODES = 64
 
 S = np.zeros((nx, u_record.shape[1]))
 mm = min(nx, u_record.shape[1])
@@ -38,7 +38,7 @@ for ss in range(psi.shape[1]):
 # plot the modes
 colors = plt.cm.coolwarm(np.arange(MODES) / (MODES-1.))
 for i in range(MODES): plt.plot(Q[i, :], c=colors[i], label=i)
-plt.legend(ncol=MODES, loc="upper center")
+plt.legend(ncol=7, loc="upper center")
 plt.ylabel(r'ai')
 plt.xlabel('t')
 plt.savefig('True_evolution_%i.pdf'%nx) ; plt.clf()
@@ -103,9 +103,9 @@ divider = int(float(nt) / n_save)
 u_red_record = np.zeros((nx, nt / divider + 1))
 a_record = np.zeros((a0.size, nt / divider + 1))
 from scipy.integrate import ode
-r = ode(dqdt).set_integrator("dop853")
+#r = ode(dqdt).set_integrator("dop853")
 #r = ode(dqdt).set_integrator("lsoda", nsteps=100 * nt, ixpr=True, max_hnil=5)
-#r = ode(dqdt).set_integrator("vode", nsteps=5000000, method="bdf")
+r = ode(dqdt).set_integrator("vode", nsteps=5000000, method="bdf")
 #r = ode(dqdt)
 r.set_initial_value(a0, t0)
 ii = 0
@@ -123,12 +123,16 @@ u_red_record[:, -1] = np.dot(a, psi[:, :MODES].T).copy()
 ####################################################
 plt.plot(x, ubar + u_record[:, -1], c='k')
 plt.plot(x, ubar + u_red_record[:, -1], c='r')
-plt.title('%i Modes, nu=%f.4, nx=%i'%(MODES, nu, nx))
-plt.show()
+plt.plot(x, ubar + u_record[:, 0], c='k', ls='--')
+plt.plot(x, ubar + u_red_record[:, 0], c='r', ls='--')
+plt.title('%i Modes, nu=%f, nx=%i'%(MODES, nu, nx))
+plt.savefig('u_red_hist_%im%ix%f.pdf'%(MODES, nx, nu))
+plt.clf()
 
 for ii in range(MODES):
     plt.plot(a_record[ii, :], label=ii)
 plt.legend(ncol=MODES, loc="upper center")
 plt.xlabel('Time')
 plt.ylabel('ai')
-plt.show()
+plt.savefig('a_red_hist_%im%ixnu%f.pdf'%(MODES, nx, nu))
+plt.clf()

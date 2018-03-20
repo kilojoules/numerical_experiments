@@ -14,7 +14,7 @@ dx = x[1] - x[0]
 evolution_time = 1
 
 #@nb.jit
-def geturec(nu=.05, x=x, evolution_time=evolution_time, u0=None, n_save_t=500, ub=1, strategy='4c5d'):
+def geturec(nu=.05, x=x, evolution_time=evolution_time, u0=None, n_save_t=500, ubl=1., ubr=1., strategy='4c5d'):
 
     # Prescribde c=.1 and cfts=.3
     dx = x[1] - x[0]
@@ -24,11 +24,12 @@ def geturec(nu=.05, x=x, evolution_time=evolution_time, u0=None, n_save_t=500, u
     if divider ==0: raise(IOError("not enough time steps to save %i times"%n_save_t))
 
     # initially purturb u
-    u_initial = ub + .8 * np.sin(x)
+    u_initial = ubl + .8 * np.sin(x)
     if u0 is not None: u_initial = u0
     #u_initial = 1 + .2 * np.sin(x) #+ 0.3 * np.sin(x * 3)
     u = u_initial.copy()
-    u[[0, -1]] = ub
+    u[0] = ubl
+    u[-1] = ubr
 
     u0 = u.copy()
 
@@ -36,7 +37,7 @@ def geturec(nu=.05, x=x, evolution_time=evolution_time, u0=None, n_save_t=500, u
     # u_record holds all the snapshots. 
     #if divider == 0: u_record = np.zeros((x.size, 1))
     #else: u_record = np.zeros((x.size, nt / divider + 2))
-    u_record = np.zeros((x.size, nt / divider + 2))
+    u_record = np.zeros((x.size, int(nt / divider + 2)))
 
     # Evolve through time
     ii = 1

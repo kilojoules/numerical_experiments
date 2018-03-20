@@ -19,7 +19,7 @@ print 'full model ran'
 psi, D, phi = np.linalg.svd(u_record) # P D Q is the approximation
 
 # choose # of modes to keep
-MODES = 8
+MODES = 3
 
 S = np.zeros((nx, u_record.shape[1]))
 mm = min(nx, u_record.shape[1])
