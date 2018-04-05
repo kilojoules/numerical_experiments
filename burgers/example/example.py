@@ -90,7 +90,7 @@ def ul1(u, dx): return np.sqrt(np.sum(u ** 2)) / u.size
 # Now sweep through dxs to find convergence rate
 
 # Define dxs to sweep
-xrang = np.linspace(350, 400, 4)
+xrang = np.linspace(900, 1000, 6)
 
 # this function accepts a differentiation key name and returns a list of dx and L-1 points
 # the keynames are '3c' for 3 point centered differentiation and '5c' for 5 point centered differentiation
@@ -101,11 +101,11 @@ def errf(strat):
    dxs= []
 
    # Establish truth value with a more-resolved grid
-   x = np.linspace(0, XF, 800) ; dx = x[1] - x[0]
+   x = np.linspace(0, XF, 2000) ; dx = x[1] - x[0]
 
    # Record truth L-1 and dt associated with finest "truth" grid
-   trueu = geturec(nu=nu, x=x, diffstrategy=strat, evolution_time=.2, n_save_t=20, ubl=0, ubr=0)
-   truedt = geturec(nu=nu, x=x, diffstrategy=strat, evolution_time=.2, n_save_t=20, ubl=0, ubr=0, returndt=True)
+   trueu = geturec(nu=nu, x=x, diffstrategy=strat, evolution_time=.05, n_save_t=20, ubl=0, ubr=0)
+   truedt = geturec(nu=nu, x=x, diffstrategy=strat, evolution_time=.05, n_save_t=20, ubl=0, ubr=0, returndt=True) / 100.
    trueqoi = ul1(trueu[:, -1], dx)
 
    # Sweep dxs
@@ -114,7 +114,7 @@ def errf(strat):
        dxs.append(dx)
 
        # Run solver, hold dt fixed
-       u = geturec(nu=nu, x=x, diffstrategy='5c', evolution_time=.2, n_save_t=20, ubl=0, ubr=0, dt=truedt)
+       u = geturec(nu=nu, x=x, diffstrategy=strat, evolution_time=.05, n_save_t=20, ubl=0, ubr=0, dt=truedt)
 
        # record |L-1(dx) - L-1(truth)|
        qoi = ul1(u[:, -1], dx)
@@ -129,7 +129,7 @@ dxs, ypoints = errf(strategy)
 def fit2(a): return 1000 * np.sum((a * np.array(dxs) ** 2 - ypoints) ** 2)
 def fit4(a): return 1000 * np.sum((np.exp(a) * np.array(dxs) ** 4 - ypoints) ** 2)
 a = mini(fit2, 500).x
-b = mini(fit4, 11).x
+b = mini(fit4, 14).x
 plt.plot(dxs,  a * np.array(dxs)**2, c='k', label=r"$\nu^2$", ls='--')
 plt.plot(dxs,  np.exp(b) * np.array(dxs)**4, c='k', label=r"$\nu^4$")
 plt.plot(dxs, ypoints, label=r"Convergence", marker='x')
