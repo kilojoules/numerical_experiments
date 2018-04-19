@@ -48,7 +48,7 @@ def diffusive_dudt(un, nu, dx, strategy='5c'):
 
 # Velocity Evolution Function. Accepts initial and boundary conditions, returns time evolution history.
 #@nb.jit
-def geturec(x, nu=.05, evolution_time=1, u0=None, n_save_t=50, ubl=0., ubr=0., diffstrategy='5c', convstrategy='4c', dt=None, returndt=False):
+def geturec(x, nu=.05, evolution_time=1, u0=None, n_save_t=50, ubl=0., ubr=0., diffstrategy='5c', convstrategy='4c', timestrategy='fe', dt=None, returndt=False):
 
     dx = x[1] - x[0]
 
@@ -91,28 +91,38 @@ def geturec(x, nu=.05, evolution_time=1, u0=None, n_save_t=50, ubl=0., ubr=0., d
         dudt = diffusive_dudt(un, nu, dx, strategy=diffstrategy) + convective_dudt(un, dx, strategy=convstrategy)
 
         # forward euler time step
-        u = un + dt * dudt
+        if timestrategy == 'fe':
+           u = un + dt * dudt
+        elif timestrategy == 'rk2':
+            uhalfn = un + dt * dudt / 2.
+            duhalfn_dt1 = diffusive_dudt(uhalfn, nu, dx, strategy=diffstrategy) + convective_dudt(uhalfn, dx, strategy=convstrategy)
+            u = un + dt * duhalfn_dt1
+            #u = 0.5 * (un + dt * dudt + uhalfn + duhalfn_dt1 * dt)
+            if _ == 0: print('hey!')
+
         # RK 4 time step
-        #uhalfn = un + dt * dudt / 2.
-        #duhalfn_dt1 = diffusive_dudt(uhalfn, nu, dx, strategy=diffstrategy)
-        #uhalfk2 = un + duhalfn_dt1 * dt / 2
-        #duhalfk2_dt = diffusive_dudt(uhalfk2, nu, dx, strategy=diffstrategy)
-        #ufull = un + duhalfk2_dt * dt
-        #dufull_dt = diffusive_dudt(ufull, nu, dx, strategy=diffstrategy)
-        #u = un + (dt / 6.) * (dudt + 2 * duhalfn_dt1 + 2 * duhalfk2_dt + dufull_dt)
+        elif timestrategy == 'rk4':
+            uhalfn = un + dt * dudt / 2.
+            duhalfn_dt1 = diffusive_dudt(uhalfn, nu, dx, strategy=diffstrategy) + convective_dudt(uhalfn, dx, strategy=convstrategy)
+            uhalfk2 = un + duhalfn_dt1 * dt / 2
+            duhalfk2_dt = diffusive_dudt(uhalfk2, nu, dx, strategy=diffstrategy) + convective_dudt(uhalfk2, dx, strategy=convstrategy)
+            ufull = un + duhalfk2_dt * dt
+            dufull_dt = diffusive_dudt(ufull, nu, dx, strategy=diffstrategy)+ convective_dudt(ufull, dx, strategy=convstrategy)
+            u = un + (dt / 6.) * (dudt + 2 * duhalfn_dt1 + 2 * duhalfk2_dt + dufull_dt)
+        else: raise(Exception("Error"))
 
         # Save every mth time step
-    return u
-    #    if _ % divider == 0:
-    #        u_record[:, ii] = u.copy()
-    #        ii += 1
-    #u_record[:, -1] = u
-    #return u_record
+    #return u
+        if _ % divider == 0:
+            u_record[:, ii] = u.copy()
+            ii += 1
+    u_record[:, -1] = u
+    return u_record
     #return u_record[1:-1, :]
 
 if __name__=="__main__":
     x = np.linspace(0, np.pi, 801)
-    u = geturec(x, nu=0.1, dt=5e-9, evolution_time=0.00002, n_save_t=1)
+    u = geturec(x, nu=0.1, dt=5e-9, evolution_time=0.00002, n_save_t=1)[:, -1]
     fl = open('mine.dat', 'w')
     fl.write(' '.join([str(s) for s in u]))
     #fl.write(' '.join([str(s) for s in u[:, -1]]))
