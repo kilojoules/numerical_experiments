@@ -54,11 +54,13 @@ def geturec(x, nu=.05, evolution_time=1, u0=None, n_save_t=50, ubl=0., ubr=0., d
 
     # Prescribde cfl=0.05 and ftcs=0.02
     if dt is not None: pass
-    else: dt = min(.05 * dx / 1., .02 / nu * dx ** 2)
+    else: dt = min(.02 * dx / 1., .02 / nu * dx ** 2)
     if returndt: return dt
 
     # Determine the interval, "divider", to record time with
     nt = int(evolution_time / dt)
+    dt = evolution_time / nt
+    print('t is ', nt * dt)
     divider = int(nt / float(n_save_t))
     if divider ==0: raise(IOError("not enough time steps to save %i times"%n_save_t))
 
