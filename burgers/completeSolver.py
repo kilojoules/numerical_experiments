@@ -59,7 +59,7 @@ def diffusive_dudt(un, nu, dx, strategy='5c', BCs='dirchlet'):
 
 # Velocity Evolution Function. Accepts initial and boundary conditions, returns time evolution history.
 #@nb.jit
-def geturec(x, nu=.05, evolution_time=1, u0=None, n_save_t=50, ubl=0., ubr=0., diffstrategy='5c', convstrategy='4c', timestrategy='fe', dt=None, returndt=False, BCs='dirchlet'):
+def geturec(x, nu=.05, evolution_time=1, u0=None, n_save_t=50, ubl=0., ubr=0., diffstrategy='5c', convstrategy='4c', timestrategy='fe', dt=None, returndt=False, BCs='periodic'):
 
     dx = x[1] - x[0]
 
@@ -75,19 +75,21 @@ def geturec(x, nu=.05, evolution_time=1, u0=None, n_save_t=50, ubl=0., ubr=0., d
     if divider ==0: raise(IOError("not enough time steps to save %i times"%n_save_t))
 
     # The default initial condition is a half sine wave.
-    u_initial = ubl + np.sin(x) ** 2
+    u_initial = ubl + np.sin(x) ** 2 
     #u_initial = ubl + np.sin(x * np.pi)
     if u0 is not None: u_initial = u0
     u = u_initial
-    u[0] = ubl
-    u[-1] = ubr
+    if BCs == 'dirchlet':
+        u[0] = ubl
+        u[-1] = ubr
 
     # insert ghost cells; extra cells on the left and right
     # for the edge cases of the finite difference scheme
-    #x = np.insert(x, 0, x[0]-dx)
-    #x = np.insert(x, -1, x[-1]+dx)
-    #u = np.insert(u, 0, ubl)
-    #u = np.insert(u, -1, ubr)
+    #if BCs == 'periodic':
+    #   x = np.insert(x, 0, x[0]-dx)
+    #   x = np.insert(x, -1, x[-1]+dx)
+    #   u = np.insert(u, 0, ubl)
+    #   u = np.insert(u, -1, ubr)
 
     # u_record holds all the snapshots. They are evenly spaced in time,
     # except the final and initial states
@@ -99,7 +101,9 @@ def geturec(x, nu=.05, evolution_time=1, u0=None, n_save_t=50, ubl=0., ubr=0., d
     u_record[:, 0] = u
     for _ in range(nt):
         un = u.copy()
-        #dudt = diffusive_dudt(un, nu, dx, strategy=diffstrategy) 
+        #dudt = diffusive_dudt(un, nu, dx, strategy=diffstrategy, BCs=BCs) 
+        #dudt = convective_dudt(un, dx, strategy=convstrategy, BCs=BCs)
+        #print(diffusive_dudt(un, nu, dx, strategy=diffstrategy, BCs=BCs))
         dudt = diffusive_dudt(un, nu, dx, strategy=diffstrategy, BCs=BCs) + convective_dudt(un, dx, strategy=convstrategy, BCs=BCs)
 
         # forward euler time step
@@ -129,7 +133,6 @@ def geturec(x, nu=.05, evolution_time=1, u0=None, n_save_t=50, ubl=0., ubr=0., d
             ii += 1
     u_record[:, -1] = u
     return u_record
-    #return u_record[1:-1, :]
 
 if __name__=="__main__":
     x = np.linspace(0, np.pi, 801)
