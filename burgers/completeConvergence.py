@@ -12,7 +12,7 @@ nu = 0.7
 #quit()
 
 # Spatial Convergence - second order
-if True:
+if False:
     nu = 0.0001
     ET=.004
     nxs = [2 ** _ for _ in range(4, 8)]
@@ -58,17 +58,18 @@ if True:
     plt.clf()
                         
 
+# Spatial Convergence - fourth order
 if True:
-    nu = 0.000001
-    ET=.2
-    nxs = [2 ** _ for _ in range(4, 9)]
+    nu = 0.001
+    ET=1.2
+    nxs = [2 ** _ for _ in range(9, 12)]
     nxs.reverse()
     nxs = np.array(nxs)  * 2 ** 1
     nx = nxs[0] * 4
     print(nx)
     x = np.linspace(0, np.pi, nx+1)
     BC='periodic'
-    TS='rk4'
+    TS='fe'
     cs = '4c'
     ds = '5c'
     trueu = geturec(x=x, nu=nu, evolution_time=ET, n_save_t=1, timestrategy=TS, BCs=BC, convstrategy=cs, diffstrategy=ds)
@@ -80,9 +81,9 @@ if True:
         x = np.linspace(0, np.pi, nx+1)
         dxs.append(x[1] - x[0])
         u = geturec(x=x, nu=nu, evolution_time=ET, n_save_t=1, timestrategy=TS, BCs=BC, dt=truedt, convstrategy=cs, diffstrategy=ds)
-        #y_2.append(np.max(np.abs(u[:, -1] - trueu[0::2 **( ii + 2 ), -1])))
+        y_2.append(np.max(np.abs(u[:, -1] - trueu[0::2 **( ii + 2 ), -1])))
         #y_2.append(np.sum(np.abs((u[:, -1] - trueu[0::2 **( ii + 2 ), -1])) / nx))
-        y_2.append(np.sqrt(np.sum((u[:, -1] - trueu[0::2 **( ii + 2 ), -1])**2) / nx))
+        #y_2.append(np.sqrt(np.sum((u[:, -1] - trueu[0::2 **( ii + 2 ), -1])**2) / nx))
     dxs = np.array(dxs)
     
     def fitness(a): return 1e25 * np.sum((np.exp(a) * dxs[0] - y_2[0]) ** 2)
