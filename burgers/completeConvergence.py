@@ -13,14 +13,14 @@ nu = 0.7
 
 # Spatial Convergence - second order
 if False:
-    nu = 0.0001
+    nu = 0.1
     ET=.004
     nxs = [2 ** _ for _ in range(4, 8)]
     nxs.reverse()
     nxs = np.array(nxs)  * 2 ** 1
     nx = nxs[0] * 4
     print(nx)
-    x = np.linspace(0, np.pi, nx+1)
+    x = np.linspace(0, np.pi, nx+1)[:-1]
     BC='periodic'
     TS='fe'
     cs = '2c'
@@ -29,11 +29,13 @@ if False:
     truedt = geturec(x=x, nu=nu, evolution_time=ET, n_save_t=1, timestrategy=TS, BCs=BC, convstrategy=cs, diffstrategy=ds, returndt=True)
     y_2 = []
     dxs = []
+    errs = []
     for ii, nx in enumerate(nxs):
         print(nx)
-        x = np.linspace(0, np.pi, nx+1)
+        x = np.linspace(0, np.pi, nx+1)[:-1]
         dxs.append(x[1] - x[0])
         u = geturec(x=x, nu=nu, evolution_time=ET, n_save_t=1, timestrategy=TS, BCs=BC, dt=truedt, convstrategy=cs, diffstrategy=ds)
+        errs.append(np.abs(u[:, -1] - trueu[0::2 **( ii + 2 ), -1]))
         y_2.append(np.max(np.abs(u[:, -1] - trueu[0::2 **( ii + 2 ), -1])))
         #y_2.append(np.sum(np.abs((u[:, -1] - trueu[0::2 **( ii + 2 ), -1])) / nx))
         #y_2.append(np.sqrt(np.sum((u[:, -1] - trueu[0::2 **( ii + 2 ), -1])**2) / nx))
@@ -60,30 +62,32 @@ if False:
 
 # Spatial Convergence - fourth order
 if True:
-    nu = 0.001
-    ET=1.2
-    nxs = [2 ** _ for _ in range(9, 12)]
+    nu = 0.01
+    ET=.0002
+    nxs = [2 ** _ for _ in range(4, 9)]
     nxs.reverse()
     nxs = np.array(nxs)  * 2 ** 1
     nx = nxs[0] * 4
     print(nx)
-    x = np.linspace(0, np.pi, nx+1)
+    x = np.linspace(0, np.pi, nx+1)[:-1]
     BC='periodic'
     TS='fe'
     cs = '4c'
     ds = '5c'
-    trueu = geturec(x=x, nu=nu, evolution_time=ET, n_save_t=1, timestrategy=TS, BCs=BC, convstrategy=cs, diffstrategy=ds)
-    truedt = geturec(x=x, nu=nu, evolution_time=ET, n_save_t=1, timestrategy=TS, BCs=BC, convstrategy=cs, diffstrategy=ds, returndt=True)
+    trueu = geturec(x=x, nu=nu, evolution_time=ET, n_save_t=20, timestrategy=TS, BCs=BC, convstrategy=cs, diffstrategy=ds)
+    truedt = geturec(x=x, nu=nu, evolution_time=ET, n_save_t=20, timestrategy=TS, BCs=BC, convstrategy=cs, diffstrategy=ds, returndt=True)
     y_2 = []
     dxs = []
+    errs = []
     for ii, nx in enumerate(nxs):
         print(nx)
-        x = np.linspace(0, np.pi, nx+1)
+        x = np.linspace(0, np.pi, nx+1)[:-1]
         dxs.append(x[1] - x[0])
-        u = geturec(x=x, nu=nu, evolution_time=ET, n_save_t=1, timestrategy=TS, BCs=BC, dt=truedt, convstrategy=cs, diffstrategy=ds)
-        y_2.append(np.max(np.abs(u[:, -1] - trueu[0::2 **( ii + 2 ), -1])))
+        u = geturec(x=x, nu=nu, evolution_time=ET, n_save_t=20, timestrategy=TS, BCs=BC, dt=truedt, convstrategy=cs, diffstrategy=ds)
+        errs.append(np.abs(u[:, :] - trueu[0::2 **( ii + 2 ), :]))
+        #y_2.append(np.max(np.abs(u[:, -1] - trueu[0::2 **( ii + 2 ), -1])))
         #y_2.append(np.sum(np.abs((u[:, -1] - trueu[0::2 **( ii + 2 ), -1])) / nx))
-        #y_2.append(np.sqrt(np.sum((u[:, -1] - trueu[0::2 **( ii + 2 ), -1])**2) / nx))
+        y_2.append(np.sqrt(np.sum((u[:, -1] - trueu[0::2 **( ii + 2 ), -1])**2) / nx))
     dxs = np.array(dxs)
     
     def fitness(a): return 1e25 * np.sum((np.exp(a) * dxs[0] - y_2[0]) ** 2)
