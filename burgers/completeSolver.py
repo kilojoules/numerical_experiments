@@ -10,9 +10,16 @@ def convective_dudt(un, dx, strategy='4c', BCs='dirchlet'):
         if strategy=='2c':
             duconv[1:-1] = -1 * un[1:-1] * (un[2:] - un[:-2]) / (2 * dx)
         elif strategy == '4c':
-            duconv[2:-2] = -1 * un[2:-2] * (-1./12. * un[4:] + 8./12. * un[3:-1]  - 8/12. * un[1:-3] + 1./12. * un[:-4]) / (dx)
+            #duconv[2:-2] = -1 * un[2:-2] * (-1./12. * un[4:] + 8./12. * un[3:-1]  - 8/12. * un[1:-3] + 1./12. * un[:-4]) / (dx)
+            #duconv[1] = -1 * un[1] * ( - 25./12. * un[1] + 4 * un[2] - 3 * un[3] + 4./3. * un[4] - un[5]/4.) / dx
+            #duconv[-2] = un[-2] * ( - 25./12. * un[-2] + 4 * un[-3] - 3 * un[-4] + 4./3. * un[-5] - un[-6]/4.) / dx
             duconv[1] = -1 * un[1] * ( - 25./12. * un[1] + 4 * un[2] - 3 * un[3] + 4./3. * un[4] - un[5]/4.) / dx
             duconv[-2] = un[-2] * ( - 25./12. * un[-2] + 4 * un[-3] - 3 * un[-4] + 4./3. * un[-5] - un[-6]/4.) / dx
+            duconv[2:-2] = -1 * un[2:-2] * (-1 * un[4:] + 8 * un[3:-1]  - 8 * un[1:-3] + un[:-4]) / ( 12 * dx)
+
+
+            #duconv[1] = -1 * un[1] * ( -12./60. * un[0] - 65./60. * un[1] + 120./60. * un[2] - 60./60. * un[3] + 20./60. * un[4] - 3./60. * un[5]) / dx
+            #duconv[-2] = un[-2] * ( -12./60. * un[-1] - 65./60. * un[-2] + 120./60. * un[-3] - 60./60. * un[-4] + 20./60. * un[-5] - 3./60. * un[-6]) / dx
         else: raise(IOError("Invalid convective strategy")) ; quit()
     elif BCs == 'periodic':
         if strategy=='2c':
@@ -41,6 +48,12 @@ def diffusive_dudt(un, nu, dx, strategy='5c', BCs='dirchlet'):
             dundiff[1] = nu * (15./4. * un[1] - 77./6. * un[2] + 107./6. * un[3] - 13 * un[4] + (61./12.) * un[5] - 5./6. * un[6]) / dx ** 2
             dundiff[-2] = nu * (15./4. * un[-2] - 77./6. * un[-3] + 107./6. * un[-4] - 13 * un[-5] + (61./12.) * un[-6] - 5./6. * un[-7]) / dx ** 2
             dundiff[2:-2] = nu * (-1 * un[4:] + 16 * un[3:-1] - 30 * un[2:-2] + 16 * un[1:-3] - un[:-4]) / (12 * dx**2 )
+            #dundiff[1] = nu * (15./4. * un[1] - 77./6. * un[2] + 107./6. * un[3] - 13 * un[4] + (61./12.) * un[5] - 5./6. * un[6]) / dx ** 2
+            #dundiff[-2] = nu * (15./4. * un[-2] - 77./6. * un[-3] + 107./6. * un[-4] - 13 * un[-5] + (61./12.) * un[-6] - 5./6. * un[-7]) / dx ** 2
+            #dundiff[2:-2] = nu * (-1 * un[4:] + 16 * un[3:-1] - 30 * un[2:-2] + 16 * un[1:-3] - un[:-4]) / (12 * dx**2 )
+
+            #dundiff[1] = nu * (137./180. * un[0] - 147./180. * un[1] - 255./180. * un[2] + 470./180. * un[3] - 285./180. * un[4] + 93./180. * un[5] - 13./180. * un[6]) / dx ** 2
+            #dundiff[-2] = nu * (137./180. * un[-1] - 147./180. * un[-2] - 255./180. * un[-3] + 470./180. * un[-4] - 285./180. * un[-5] + 93./180. * un[-6] - 13./180. * un[-7]) / dx ** 2
         else: raise(IOError("Invalid diffusive strategy")) ; quit()
     elif BCs == 'periodic':
         if strategy == '3c':
