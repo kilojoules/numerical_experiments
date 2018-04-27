@@ -36,9 +36,9 @@ if True:
         dxs.append(x[1] - x[0])
         u = geturec(x=x, nu=nu, evolution_time=ET, n_save_t=1, timestrategy=TS, BCs=BC, dt=truedt, convstrategy=cs, diffstrategy=ds)
         errs.append(np.abs(u[:, -1] - trueu[0::2 **( ii + 2 ), -1]))
-        y_2.append(np.max(np.abs(u[:, -1] - trueu[0::2 **( ii + 2 ), -1])))
+        #y_2.append(np.max(np.abs(u[:, -1] - trueu[0::2 **( ii + 2 ), -1])))
         #y_2.append(np.sum(np.abs((u[:, -1] - trueu[0::2 **( ii + 2 ), -1])) / nx))
-        #y_2.append(np.sqrt(np.sum((u[:, -1] - trueu[0::2 **( ii + 2 ), -1])**2) / nx))
+        y_2.append(np.sqrt(np.sum((u[:, -1] - trueu[0::2 **( ii + 2 ), -1])**2) / nx))
     dxs = np.array(dxs)
     
     def fitness(a): return 1e25 * np.sum((np.exp(a) * dxs[0] - y_2[0]) ** 2)
@@ -59,7 +59,6 @@ if True:
     plt.ylabel(r'$\epsilon$')
     plt.savefig('2space%s.pdf'%BC)
     plt.clf()
-                        
 
 # Spatial Convergence - fourth order - periodic
 if True:
@@ -75,8 +74,8 @@ if True:
     TS='fe'
     cs = '4c'
     ds = '5c'
-    trueu = geturec(x=x, nu=nu, evolution_time=ET, n_save_t=20, timestrategy=TS, BCs=BC, convstrategy=cs, diffstrategy=ds)
     truedt = geturec(x=x, nu=nu, evolution_time=ET, n_save_t=20, timestrategy=TS, BCs=BC, convstrategy=cs, diffstrategy=ds, returndt=True)
+    trueu = geturec(x=x, nu=nu, evolution_time=ET, n_save_t=20, timestrategy=TS, BCs=BC, convstrategy=cs, diffstrategy=ds)
     y_2 = []
     dxs = []
     errs = []
@@ -141,8 +140,8 @@ if True:
         u = geturec(x=x, nu=nu, evolution_time=ET, n_save_t=1, timestrategy=TS, BCs=BC, dt=truedt, convstrategy=cs, diffstrategy=ds)
         errs.append(np.abs(u[:, -1] - trueu[0::2 **( ii + 2 ), -1]))
         #y_2.append(np.max(np.abs(u[:, -1] - trueu[0::2 **( ii + 2 ), -1])))
-        y_2.append(np.sum(np.abs((u[:, -1] - trueu[0::2 **( ii + 2 ), -1])) / nx))
-        #y_2.append(np.sqrt(np.sum((u[:, -1] - trueu[0::2 **( ii + 2 ), -1])**2) / nx))
+        #y_2.append(np.sum(np.abs((u[:, -1] - trueu[0::2 **( ii + 2 ), -1])) / nx))
+        y_2.append(np.sqrt(np.sum((u[:, -1] - trueu[0::2 **( ii + 2 ), -1])**2) / nx))
     dxs = np.array(dxs)
     
     def fitness(a): return 1e25 * np.sum((np.exp(a) * dxs[0] - y_2[0]) ** 2)
@@ -163,7 +162,6 @@ if True:
     plt.ylabel(r'$\epsilon$')
     plt.savefig('2space%s.pdf'%BC)
     plt.clf()
-                        
 
 # Spatial Convergence - fourth order - dirchlet
 if True:
@@ -223,7 +221,7 @@ if True:
 
 
 
-# Time comvergence second order
+# Time comvergence second order - periodic
 if True:
      NU = 1e-3
      ET = 2e-2
@@ -231,6 +229,7 @@ if True:
      x = np.linspace(0,np.pi, 2002)[:-1]
      dts = np.linspace(1, 20, 5) * 1e-6
      maxdt = geturec(x, nu=NU, evolution_time=ET, timestrategy=TS, returndt=True)
+     print(dts, dts[0] / 10)
      if np.max(dts) > maxdt: raise(Exception("Bad time")) ; quit()
      trueu = geturec(x, nu=NU, evolution_time=ET, dt=dts[0] / 10., n_save_t=1, timestrategy=TS)[:, -1]
      y = []
@@ -260,7 +259,7 @@ if True:
      plt.savefig('time2periodic.pdf')
      plt.clf()
 
-# Time comvergence fourth order
+# Time comvergence fourth order - periodic
 if True:
      NU = 4e-2
      ET = 6e-1
@@ -275,8 +274,8 @@ if True:
      #dts = np.array([2e-6, 1e-6, 8e-7, 5e-7, 2e-7, 1e-7])  * 1e2
      for dt in dts:
         u = geturec(x, evolution_time=ET, dt=dt, nu=NU, n_save_t=1, timestrategy=TS, BCs=BC)[:, -1]
-        y.append(np.max(np.abs(u - trueu)))
-        #y.append(np.sqrt(np.sum((u - trueu) ** 2)))
+        #y.append(np.max(np.abs(u - trueu)))
+        y.append(np.sqrt(np.sum((u - trueu) ** 2)))
      #plt.plot(dts, dts, ls='--', marker='x')
      #plt.plot(dts, 1e12 * dts ** 4, ls='--', marker='^')
      z = mini(lambda x: 1e18 * (np.exp(x)*dts[-1] - y[-1]) ** 2, [1]).x
@@ -298,25 +297,25 @@ if True:
      plt.clf()
 
 
-
-
 # Time comvergence fourth order, dirchlet
 if True:
      NU = 4e-2
      ET = 6e-1
      TS = 'rk4'
-     x = np.linspace(0,np.pi, 11)
-     dts = np.linspace(3, 4, 10) * 1e-3
+     x = np.linspace(0,np.pi, 31)
+     dts = np.linspace(1, 2, 5) * 1e-3
      BC='dirchlet'
      maxdt = geturec(x, nu=NU, evolution_time=ET, timestrategy=TS, returndt=True)
+     print(dts, dts[0]/10)
      if np.max(dts) > maxdt: raise(Exception("Bad time")) ; quit()
      trueu = geturec(x, nu=NU, evolution_time=ET, dt=dts[0] / 10., n_save_t=1, timestrategy=TS, BCs=BC)[:, -1]
      y = []
      #dts = np.array([2e-6, 1e-6, 8e-7, 5e-7, 2e-7, 1e-7])  * 1e2
      for dt in dts:
+        print(dt)
         u = geturec(x, evolution_time=ET, dt=dt, nu=NU, n_save_t=1, timestrategy=TS, BCs=BC)[:, -1]
-        y.append(np.max(np.abs(u - trueu)))
-        #y.append(np.sqrt(np.sum((u - trueu) ** 2)))
+        #y.append(np.max(np.abs(u - trueu)))
+        y.append(np.sqrt(np.sum((u - trueu) ** 2)))
      #plt.plot(dts, dts, ls='--', marker='x')
      #plt.plot(dts, 1e12 * dts ** 4, ls='--', marker='^')
      #z = mini(lambda x: 1e18 * (np.exp(x)*dts[-1] - y[-1]) ** 2, [1]).x
