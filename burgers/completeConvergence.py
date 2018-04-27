@@ -222,7 +222,7 @@ if False:
 
 
 # Time comvergence second order - periodic
-if True:
+if False:
      NU = 1e-3
      ET = 2e-2
      TS = 'rk2'
@@ -273,12 +273,12 @@ if True:
 
 # Time comvergence fourth order - periodic
 if False:
-     NU = 4e-2
-     ET = 6e-1
+     NU = 1e-3
+     ET = 1.
      TS = 'rk4'
      BC = 'periodic'
-     x = np.linspace(0,np.pi, 11)
-     dts = np.linspace(3, 4, 10) * 1e-3
+     x = np.linspace(0,np.pi, 32)[:-1]
+     dts = np.linspace(1, 2, 5) * 1e-3
      maxdt = geturec(x, nu=NU, evolution_time=ET, timestrategy=TS, returndt=True, BCs=BC)
      if np.max(dts) > maxdt: raise(Exception("Bad time")) ; quit()
      trueu = geturec(x, nu=NU, evolution_time=ET, dt=dts[0] / 10., n_save_t=1, timestrategy=TS, BCs=BC)[:, -1]
@@ -290,14 +290,14 @@ if False:
         y.append(np.sqrt(np.sum((u - trueu) ** 2)))
      #plt.plot(dts, dts, ls='--', marker='x')
      #plt.plot(dts, 1e12 * dts ** 4, ls='--', marker='^')
-     z = mini(lambda x: 1e18 * (np.exp(x)*dts[-1] - y[-1]) ** 2, [1]).x
+     z = mini(lambda x: 1e24 * (np.exp(x)*dts[-1] - y[-1]) ** 2, [1]).x
      plt.plot(dts, dts * z, c='k', lw=3, label=r'$\Delta t$')
-     a = mini(lambda x: 1e20 * (np.exp(x)*dts[-1] ** 2 -y[-1])**2, [20]).x
+     a = mini(lambda x: 1e25 * (np.exp(x)*dts[-1] ** 2 -y[-1])**2, [20]).x
      plt.plot(dts, dts ** 2 * np.exp(a), c='k', lw=3, ls='--', label=r'$\Delta t^2$')
-     b = mini(lambda x: 1e20 * (np.exp(x)*dts[-1] ** 3 -y[-1]) ** 2, [50]).x
+     b = mini(lambda x: 1e25 * (np.exp(x)*dts[-1] ** 3 -y[-1]) ** 2, [50]).x
      l = plt.plot(dts, dts **3 * np.exp(b), c='k', lw=3, ls='--', label=r'$\Delta t^3$')[0]
      l.set_dashes([1, 1])
-     c = mini(lambda x: 1e18 * (np.exp(x)*dts[-1] ** 4 -y[-1]) ** 2, [70]).x
+     c = mini(lambda x: 1e24 * (np.exp(x)*dts[-1] ** 4 -y[-1]) ** 2, [70]).x
      plt.plot(dts, dts ** 4 * np.exp(c), c='k', lw=3, ls='-.', label=r'$\Delta t^4$')
      plt.plot(dts, y, c='r', marker='*', label='convergence', markersize=10)
      plt.legend()
@@ -311,8 +311,8 @@ if False:
 
 # Time comvergence fourth order, dirchlet
 if False:
-     NU = 4e-2
-     ET = 6e-1
+     NU = 0.1
+     ET = 5e-1
      TS = 'rk4'
      x = np.linspace(0,np.pi, 31)
      dts = np.linspace(1, 2, 5) * 1e-3
@@ -389,7 +389,7 @@ if False:
 
 ## BAD ERROR PLOTS ##
 # too much convergence
-if True:
+if False:
      NU = 1e-3
      ET = 2e-7
      TS = 'rk2'
@@ -438,7 +438,7 @@ if True:
 
 
 # not enough convergence
-if True:
+if False:
     nu = 0.001
     ET=4
     nxs = [2 ** _ for _ in range(3, 7)]
