@@ -19,7 +19,7 @@ if False:
     nxs.reverse()
     nxs = np.array(nxs)  * 2 ** 1
     nx = nxs[0] * 4
-    print(nx)
+    print(nxs, nx)
     x = np.linspace(0, np.pi, nx+1)[:-1]
     BC='periodic'
     TS='fe'
@@ -27,6 +27,7 @@ if False:
     ds = '3c'
     trueu = geturec(x=x, nu=nu, evolution_time=ET, n_save_t=1, timestrategy=TS, BCs=BC, convstrategy=cs, diffstrategy=ds)
     truedt = geturec(x=x, nu=nu, evolution_time=ET, n_save_t=1, timestrategy=TS, BCs=BC, convstrategy=cs, diffstrategy=ds, returndt=True)
+    print(truedt)
     y_2 = []
     dxs = []
     errs = []
@@ -76,6 +77,7 @@ if False:
     ds = '5c'
     truedt = geturec(x=x, nu=nu, evolution_time=ET, n_save_t=20, timestrategy=TS, BCs=BC, convstrategy=cs, diffstrategy=ds, returndt=True)
     trueu = geturec(x=x, nu=nu, evolution_time=ET, n_save_t=20, timestrategy=TS, BCs=BC, convstrategy=cs, diffstrategy=ds)
+    print(truedt)
     y_2 = []
     dxs = []
     errs = []
@@ -118,7 +120,7 @@ if False:
 if False:
     nu = 0.1
     ET=.004
-    nxs = [2 ** _ for _ in range(4, 10)]
+    nxs = [2 ** _ for _ in range(6, 10)]
     nxs.reverse()
     nxs = np.array(nxs)  * 2 ** 1
     nx = nxs[0] * 4
@@ -165,13 +167,13 @@ if False:
 
 # Spatial Convergence - fourth order - dirchlet
 if False:
-    nu = 0.01
-    ET=.01
-    nxs = [2 ** _ for _ in range(3, 6)]
+    nu = 0.001
+    ET = .001
+    nxs = [2 ** _ for _ in range(4, 8)]
     nxs.reverse()
     nxs = np.array(nxs) 
-    nx = nxs[0] * 2 ** 5
-    print(nx)
+    nx = nxs[0] * 2 ** 4
+    print(nxs, nx)
     x = np.linspace(0, np.pi, nx+1)
     BC='dirchlet'
     TS='rk4'
@@ -180,6 +182,7 @@ if False:
     print('finding truth with ', x[1] - x[0])
     trueu = geturec(x=x, nu=nu, evolution_time=ET, n_save_t=20, timestrategy=TS, BCs=BC, convstrategy=cs, diffstrategy=ds)
     truedt = geturec(x=x, nu=nu, evolution_time=ET, n_save_t=20, timestrategy=TS, BCs=BC, convstrategy=cs, diffstrategy=ds, returndt=True)
+    print('dt is ', truedt)
     y_2 = []
     dxs = []
     errs = []
@@ -188,10 +191,10 @@ if False:
         x = np.linspace(0, np.pi, nx+1)
         dxs.append(x[1] - x[0])
         u = geturec(x=x, nu=nu, evolution_time=ET, n_save_t=20, timestrategy=TS, BCs=BC, dt=truedt, convstrategy=cs, diffstrategy=ds)
-        errs.append(np.abs(u[:, -1] - trueu[0::2 **( ii + 5 ), -1]) / nx)
+        errs.append(np.abs(u[:, -1] - trueu[0::2 **( ii + 4 ), -1]) / nx)
         #y_2.append(np.max(np.abs(u[:, -1] - trueu[0::2 **( ii + 2 ), -1])))
         #y_2.append(np.sum(np.abs((u[:, -1] - trueu[0::2 **( ii + 5 ), -1])) / nx))
-        y_2.append(np.sqrt(np.sum((u[:, -1] - trueu[0::2 **( ii + 5 ), -1])**2) / nx))
+        y_2.append(np.sqrt(np.sum((u[:, -1] - trueu[0::2 **( ii + 4 ), -1])**2) / nx))
         print(dxs[-1], y_2[-1])
     dxs = np.array(dxs)
     
@@ -224,7 +227,7 @@ if False:
 # Time comvergence second order - periodic
 if False:
      NU = 1e-3
-     ET = 2e-2
+     ET = 1e-2
      TS = 'rk2'
      x = np.linspace(0,np.pi, 2002)[:-1]
      dts = np.linspace(1, 20, 5) * 1e-6
@@ -273,6 +276,7 @@ if False:
 
 # Time comvergence fourth order - periodic
 if False:
+     print('hey')
      NU = 1e-3
      ET = 1.
      TS = 'rk4'
@@ -290,8 +294,8 @@ if False:
         y.append(np.sqrt(np.sum((u - trueu) ** 2)))
      #plt.plot(dts, dts, ls='--', marker='x')
      #plt.plot(dts, 1e12 * dts ** 4, ls='--', marker='^')
-     z = mini(lambda x: 1e24 * (np.exp(x)*dts[-1] - y[-1]) ** 2, [1]).x
-     plt.plot(dts, dts * z, c='k', lw=3, label=r'$\Delta t$')
+     #z = mini(lambda x: 1e24 * (np.exp(x)*dts[-1] - y[-1]) ** 2, [1]).x
+     #plt.plot(dts, dts * z, c='k', lw=3, label=r'$\Delta t$')
      a = mini(lambda x: 1e25 * (np.exp(x)*dts[-1] ** 2 -y[-1])**2, [20]).x
      plt.plot(dts, dts ** 2 * np.exp(a), c='k', lw=3, ls='--', label=r'$\Delta t^2$')
      b = mini(lambda x: 1e25 * (np.exp(x)*dts[-1] ** 3 -y[-1]) ** 2, [50]).x
